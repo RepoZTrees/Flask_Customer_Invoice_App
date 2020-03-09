@@ -13,7 +13,7 @@ var handler = function() {
   $.ajax(
     {
       headers:{'Accept':'application/json'}, 
-      url:'http://127.0.0.1:5000/invoices?cid='+cid,
+      url:'/invoices?cid='+cid,
       success: function(data, textStatus, jqXHR) {
         table = create_invoice_table(data.invoices);
         $("#invoices").html(table);
@@ -26,7 +26,7 @@ var main = function() {
   $("#createinvoice").click(function(e) {
     e.preventDefault(); 
     $.post({
-      url: 'http://127.0.0.1:5000/invoices',
+      url: '/invoices',
       data: $("input").serializeArray(),
       success: function(data, status, xhr) {
         $("#invoices").html("Loading...");
