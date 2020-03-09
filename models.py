@@ -1,46 +1,42 @@
 import random
+
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+
 import faker
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, Integer, create_engine, ForeignKey, BLOB, Date, Boolean, Table
 from sqlalchemy.orm import sessionmaker, relationship
- 
-Base = declarative_base()
- 
-class Customer(Base):
-    __tablename__ = "customers_list"
-    id = Column(Integer, primary_key = True)
-    name = Column(String)
-    jdate = Column(Date)
-    address = Column(String)
-    email = Column(String)
-    invoices = relationship('Invoice', backref="customer")
- 
-class Invoice(Base):
-    __tablename__ = "customer_invoices"
-    id = Column(Integer, primary_key = True)
-    particulars = Column(String)
-    date = Column(Date)
-    amount = Column(Integer)
-    customer_id = Column(Integer, ForeignKey('customers_list.id'))
- 
+
+app = Flask("lycaeum")
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://uqktycdovwzexe:03413452092d8e09dee39403d5c53f98f9a362d7014747a0fb12cbe5c6c14cfd@ec2-34-200-116-132.compute-1.amazonaws.com:5432/d9ptrbj2pmgk9h'
+db = SQLAlchemy(app)
+
+
+class Customer(db.Model):
+    __tablename__ = "invoice_customer"
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String)
+    jdate = db.Column(db.Date)
+    address = db.Column(db.String)
+    email = db.Column(db.String)
+    invoices = db.relationship('Invoice', backref="customer")
+
+class Invoice(db.Model):
+    __tablename__ = "invoice_invoice"
+    id = db.Column(db.Integer, primary_key = True)
+    particulars = db.Column(db.String)
+    date = db.Column(db.Date)
+    amount = db.Column(db.Integer)
+    customer_id = db.Column(db.Integer, db.ForeignKey('invoice_customer.id'))
+
 def create_db():
-    url = "postgres:///flask_customer_invoice"
-    # url = "sqlite:///invoice_db.sqlite"
-    engine = create_engine(url)
-    Base.metadata.create_all(engine)
- 
-def get_session():
-    url = "postgres:///flask_customer_invoice"
-    # url = "sqlite:///invoice_db.sqlite"
-    engine = create_engine(url)
-    Session = sessionmaker(bind = engine)
-    session = Session()
-    return session
- 
+    db.create_all()
+
 def main():
     create_db()
     f = faker.Faker()
-    session = get_session()
+    session = db.session
     for i in range(100):
         c = Customer(name = f.name(),
                      jdate = f.date(),
@@ -54,7 +50,10 @@ def main():
                               customer = c)
             session.add(invoice)
     session.commit()
-                                
- 
+                              
+    
+
+
+
 if __name__ == "__main__":
     main()

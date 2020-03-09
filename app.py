@@ -1,14 +1,14 @@
+import time
 import datetime 
 
 from flask import Flask, render_template, request, redirect, url_for
 
 import models
-
-app = Flask("lycaeum")
+from models import app, db
 
 @app.route("/")
 def hello():
-    session = models.get_session()
+    session = db.session
     customers = session.query(models.Customer).all()
     return render_template("customers.html", customers = customers)
 
@@ -16,7 +16,7 @@ def hello():
 def invoices():
     cid = request.args.get('cid')
     added = request.args.get('info')
-    session = models.get_session()
+    session = db.session
     customer = session.query(models.Customer).filter(models.Customer.id == cid).first()
     invoices = session.query(models.Invoice).filter(models.Invoice.customer_id == cid).all()
     if request.headers.get('Accept') == 'application/json':
@@ -27,12 +27,15 @@ def invoices():
     else:
         return render_template("invoices.html", customer = customer, invoices = invoices, added = added)
 
+            
+
 @app.route("/invoices", methods=['POST'])
 def create_invoice():
-    session = models.get_session()
+    session = db.session
     particulars = request.form['particulars']
     amount = request.form['amount']
     cid = request.form['cid']
+    
     invoice = models.Invoice(date = datetime.date.today(),
                              particulars = particulars,
                              customer_id = int(cid),
@@ -41,7 +44,7 @@ def create_invoice():
     session.add(invoice)
     session.commit()
     return redirect(url_for('invoices', cid=cid, info="added"))
-    
+       
 
 @app.route("/", methods=['POST'])
 def create_customers():
